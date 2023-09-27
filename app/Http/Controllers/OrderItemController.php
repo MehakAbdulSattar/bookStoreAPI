@@ -8,55 +8,38 @@ use App\Models\OrderItem;
 
 class OrderItemController extends Controller
 {
-    public function index()
+    public function showAllitems()
     {
         // Retrieve and return a list of order items.
         $orderItems = OrderItem::all();
         return response()->json($orderItems, Response::HTTP_OK);
     }
 
-    public function store(Request $request)
+    
+
+    public function showItem($id)
     {
-        // Validate and create a new order item.
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'book_id' => 'required|exists:books,id',
-            'quantity' => 'required|numeric',
-            'price' => 'required|numeric',
-        ]);
-
-        $orderItem = OrderItem::create($request->all());
-
-        return response()->json($orderItem, Response::HTTP_CREATED);
-    }
-
-    public function show(OrderItem $orderItem)
-    {
+        $orderItem=OrderItem::find($id);
+        if(!$orderItem)
+        {
+            return response()->json('orderitem not found');
+        }
         // Retrieve and return a specific order item.
         return response()->json($orderItem, Response::HTTP_OK);
     }
 
-    public function update(Request $request, OrderItem $orderItem)
+
+    public function deletItem($id)
     {
-        // Validate and update the order item.
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'book_id' => 'required|exists:books,id',
-            'quantity' => 'required|numeric',
-            'price' => 'required|numeric',
-        ]);
-
-        $orderItem->update($request->all());
-
-        return response()->json($orderItem, Response::HTTP_OK);
-    }
-
-    public function destroy(OrderItem $orderItem)
-    {
+        $orderItem=OrderItem::find($id);
+        if(!$orderItem)
+        {
+            return response()->json('orderitem not found');
+        }
         // Delete an order item.
         $orderItem->delete();
 
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+        return response()->json('Item Delete');
     }
 
 }

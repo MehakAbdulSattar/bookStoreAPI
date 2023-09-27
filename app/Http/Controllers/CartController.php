@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Book;
+use App\Models\Cart;
 
 class CartController extends Controller
 {
     public function viewCart(Request $request)
     {
-        $cart = $request->session()->get('cart', []);
-        return response()->json(['cart' => $cart]);
+        $user = $request->user();
+        $cartItems = Cart::where('user_id', $user->id)->get();
+        return response()->json(['cart' => $cartItems]);
     }
 
     public function addToCart(Request $request)
     {
+        $user = $request->user();
         $bookId = $request->input('book_id');
         $book = Book::find($bookId);
         if (!$book) {
@@ -22,55 +25,56 @@ class CartController extends Controller
         }
         $quantity = $request->input('quantity', 1);
 
-        // Retrieve the current cart from the session
-        $cart = $request->session()->get('cart', []);
+        // Check if the item already exists in the user's cart
+        $existingCartItem = Cart::where('user_id', $user->id)->where('book_id', $bookId)->first();
 
-        // Add the item to the cart or update the quantity if it already exists
-        if (isset($cart[$bookId])) {
-            $cart[$bookId]['quantity'] += $quantity;
+        if ($existingCartItem) {
+            // Update the quantity of the existing cart item
+            $existingCartItem->quantity += $quantity;
+            $existingCartItem->save();
         } else {
-            $cart[$bookId] = [
+            // Create a new cart item for the user
+            Cart::create([
+                'user_id' => $user->id,
                 'book_id' => $bookId,
                 'quantity' => $quantity,
                 'price' => $book->price,
-            ];
+            ]);
         }
-
-        // Store the updated cart back in the session
-        $request->session()->put('cart', $cart);
 
         return response()->json(['message' => 'Item added to cart']);
     }
 
     public function updateCartItem(Request $request, $id)
     {
+        $user = $request->user();
         $quantity = $request->input('quantity');
 
-        // Retrieve the current cart from the session
-        $cart = $request->session()->get('cart', []);
+        // Find the cart item for the user
+        $cartItem = Cart::where('user_id', $user->id)->find($id);
 
-        // Update the quantity of the item in the cart
-        if (isset($cart[$id])) {
-            $cart[$id]['quantity'] = $quantity;
+        if ($cartItem) {
+            // Update the quantity of the cart item
+            $cartItem->quantity = $quantity;
+            $cartItem->save();
+            return response()->json(['message' => 'Cart item updated']);
         }
 
-        // Store the updated cart back in the session
-        $request->session()->put('cart', $cart);
-
-        return response()->json(['message' => 'Cart item updated']);
+        return response()->json(['error' => 'Cart item not found'], 404);
     }
 
     public function removeCartItem(Request $request, $id)
     {
-        // Retrieve the current cart from the session
-        $cart = $request->session()->get('cart', []);
+        $user = $request->user();
 
-        // Remove the item from the cart
-        unset($cart[$id]);
+        // Find and delete the cart item for the user
+        $cartItem = Cart::where('user_id', $user->id)->find($id);
 
-        // Store the updated cart back in the session
-        $request->session()->put('cart', $cart);
+        if ($cartItem) {
+            $cartItem->delete();
+            return response()->json(['message' => 'Cart item removed']);
+        }
 
-        return response()->json(['message' => 'Cart item removed']);
+        return response()->json(['error' => 'Cart item not found'], 404);
     }
 }

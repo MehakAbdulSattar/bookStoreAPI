@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('author');
-            $table->string('cover_image');
+            $table->text('cover_image_url');
             $table->text('description');
             $table->decimal('price', 8, 2);
             $table->decimal('rating',3,2)->default(5);

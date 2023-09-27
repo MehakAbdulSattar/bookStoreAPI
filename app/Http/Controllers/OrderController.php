@@ -7,36 +7,29 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Session;
 use App\Models\OrderItem;
 use App\Models\Order;
+use App\Models\Cart;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function showAllOrders()
     {
-        // Retrieve and return a list of orders.
         $orders = Order::all();
         return response()->json($orders, Response::HTTP_OK);
     }
 
-    public function store(Request $request)
+    public function createOrder(Request $request)
     {
-        // Validate and create a new order.
-        // $request->validate([
-        //     'user_id' => 'required|exists:users,id',
-        //     'status' => 'required|in:pending,processing,completed,canceled',
-        // ]);
+        $userId=auth()->user()->id;
 
-        // Create the order based on the request data.
+
         $order = Order::create([
-            'user_id' => $request->user_id,
+            'user_id' => $userId,
             'status' => $request->status,
-            'total_price' => 0, // Initialize total price to 0
         ]);
 
-        // Fetch items from the session cart
-        $cartItems = $request->session()->get('cart', []);
+        $cartItems = Cart::where('user_id', $userId)->get();
         // Calculate total price and add order items
-        $totalPrice = 0;
-
+     
         foreach ($cartItems as $cartItem) {
             $bookId = $cartItem['book_id'];
             $quantity = $cartItem['quantity'];
@@ -49,50 +42,82 @@ class OrderController extends Controller
                 'quantity' => $quantity,
                 'price' => $price,
             ]);
-
-            // Update the total price
-            $totalPrice += $price * $quantity;
+            $cartItem->delete();
         }
 
-        // Update the order's total price
-        $order->update(['total_price' => $totalPrice]);
-
-        // Clear the session cart
-        Session::forget('cart');
 
         return response()->json($order, Response::HTTP_CREATED);
     }
-    public function show(Order $order)
-    {
-        // Retrieve and return a specific order.
-        return response()->json($order, Response::HTTP_OK);
-    }
 
-    public function update(Request $request, $id)
+    public function showOrder($id)
     {
-        // Validate and update the order.
-        // $request->validate([
-        //     'user_id' => 'required|exists:users,id',
-        //     'total_price' => 'required|numeric',
-        //     'status' => 'required|in:pending,processing,completed,canceled',
-        // ]);
+        // Find the order by ID
+        $order = Order::find($id);
 
-        $order=Order::find($id);
         if (!$order) {
-            return response()->json(['error' => 'Order not found'], 404);
+            return response()->json(['error' => 'Order not found'], Response::HTTP_NOT_FOUND);
         }
-        
-        $order->update($request->all());
+
+        // Return the order in a JSON response
+        return response()->json($order, Response::HTTP_OK);
+    }
+
+    public function updateOrder(Request $request, $id)
+    {
+        // Find the order by ID
+        $userId=auth()->user()->id;
+        $order = Order::find($id);
+
+        if (!$order) {
+            return response()->json(['error' => 'Order not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Fetch items from the session cart
+        $cartItems = Cart::where('user_id', $userId)->get();
+
+        // Loop through cart items and update order items
+        foreach ($cartItems as $cartItem) {
+            $bookId = $cartItem['book_id'];
+            $quantity = $cartItem['quantity'];
+            $price = $cartItem['price'];
+
+            // Find the associated order item (assuming you have a unique constraint)
+            $orderItem = OrderItem::where('order_id', $order->id)
+                ->where('book_id', $bookId)
+                ->first();
+
+            if ($orderItem) {
+                // Update the order item
+                $orderItem->update([
+                    'quantity' => $quantity,
+                    'price' => $price,
+                ]);
+            }
+        }
+
+        // Recalculate the total price for the order based on updated order items
+        $totalPrice = OrderItem::where('order_id', $order->id)->sum('price');
+
+        // Update the order's total price
+        $order->update([
+            'total_price' => $totalPrice,
+            'status'=>$request->status]);
 
         return response()->json($order, Response::HTTP_OK);
     }
 
-    public function destroy(Order $order)
+    public function deleteOrder($id)
     {
-        // Delete an order.
-        $order->delete();
+        // Find the order by ID
+        $order = Order::find($id);
 
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+        if (!$order) {
+            return response()->json(['error' => 'Order not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Delete the order
+        $order->delete();
+        return response()->json(['message' => 'Order removed']);
     }
 
 }
