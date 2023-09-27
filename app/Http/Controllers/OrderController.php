@@ -120,4 +120,19 @@ class OrderController extends Controller
         return response()->json(['message' => 'Order removed']);
     }
 
+    public function showOrdersByUserId($user_id)
+    {
+        // Find orders for the specified user
+        $orders = Order::where('user_id', $user_id)->get();
+
+        // Check if any orders were found
+        if ($orders->isEmpty()) {
+            return response()->json(['message' => 'No orders found for this user'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Return the orders in a JSON response
+        return response()->json($orders, Response::HTTP_OK);
+    }
+
+
 }
