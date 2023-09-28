@@ -55,12 +55,6 @@ class ReviewController extends Controller
             return response()->json(['error' => 'Review not found'], 404);
         }
 
-        // Check if the authenticated user is the owner of the review
-        $user = Auth::user();
-        if ($user->id !== $review->user_id) {
-            return response()->json(['error' => 'Unauthorized to delete this review'], 403);
-        }
-
         // Delete the review
         $review->delete();
 

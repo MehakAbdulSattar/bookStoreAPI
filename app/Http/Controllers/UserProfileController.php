@@ -16,7 +16,6 @@ class UserProfileController extends Controller
         }
 
         $validatedData = $request->validate([
-            // Define your validation rules here for updating user data
             'name' => 'required|string',
             'email' => 'required',
             'password' => 'required|string|min:6',
@@ -29,7 +28,7 @@ class UserProfileController extends Controller
 
     public function show()
     {
-        $user = auth()->user(); // Get the authenticated user
+        $user = auth()->user();
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }

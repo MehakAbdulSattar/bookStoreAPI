@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Session;
 use App\Models\OrderItem;
 use App\Models\Order;
 use App\Models\Cart;
@@ -28,7 +27,6 @@ class OrderController extends Controller
         ]);
 
         $cartItems = Cart::where('user_id', $userId)->get();
-        // Calculate total price and add order items
      
         foreach ($cartItems as $cartItem) {
             $bookId = $cartItem['book_id'];
