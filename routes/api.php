@@ -55,12 +55,17 @@ Route::middleware('auth:sanctum')->group(function ()
     Route::middleware(['permission:delete_orderitem'])->delete('/orderitems/delete/{orderItem_id}', [OrderItemController::class, 'deletItem']);
     
     Route::middleware(['permission:review'])->post('/create/review', [ReviewController::class, 'createReview']);
+    Route::middleware(['permission:delete_review'])->delete('deletereviews/{id}', [ReviewController::class, 'deleteReview']);
     Route::middleware(['permission:rating'])->post('/giverating/{bookid}/{rating}', [BookController::class, 'giveRating']);
     
     Route::middleware(['permission:add_wishlist'])->post('/wishlist/add/{bookId}', [WishlistController::class, 'addToWishlist']);
     Route::middleware(['permission:delete_wishlist'])->delete('/wishlist/remove/{bookId}', [WishlistController::class, 'removeFromWishlist']);
     Route::middleware(['permission:show_wishlist'])->get('/wishlist/show', [WishlistController::class, 'getUserWishlist']);
     
+    Route::middleware(['permission:create_bookcatalog'])->post('/create/bookcatalog', [BookController::class, 'addBookToCatalog']);
+    Route::middleware(['permission:update_bookcatalog'])->put('updatebooks/{id}', [BookController::class, 'updateBook']);
+    Route::middleware(['permission:delete_bookcatalog'])->delete('deletebooks/{id}', [BookController::class, 'deleteBook']);
+
 
     Route::post('/logout', [AuthController::class, 'logout']);
 

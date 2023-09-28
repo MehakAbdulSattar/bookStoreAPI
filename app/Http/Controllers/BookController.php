@@ -1,13 +1,73 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Book;
 use App\Models\Order;
 
 class BookController extends Controller
 {
+    public function addBookToCatalog(Request $request)
+    {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'cover_image_url' => 'required|url',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+        ]);
+
+        // Create a new book record in the database
+        $book = Book::create($validatedData);
+
+        return response()->json(['message' => 'Book added to catalog', 'book' => $book], 201);
+    }
+
+    
+
+    // Update a book in the catalog
+    public function updateBook(Request $request, $id)
+    {
+        // Find the book by ID
+        $book = Book::find($id);
+
+        if (!$book) {
+            return response()->json(['error' => 'Book not found'], 404);
+        }
+
+        // Validate the request data for updating the book
+        $validatedData = $request->validate([
+            'title' => 'string|max:255',
+            'author' => 'string|max:255',
+            'cover_image_url' => 'url',
+            'description' => 'string',
+            'price' => 'numeric',
+        ]);
+
+        // Update the book's attributes with the validated data
+        $book->update($validatedData);
+
+        return response()->json(['message' => 'Book updated', 'book' => $book]);
+    }
+
+    public function deleteBook($id)
+    {
+        // Find the book by ID
+        $book = Book::find($id);
+
+        if (!$book) {
+            return response()->json(['error' => 'Book not found'], 404);
+        }
+
+        // Delete the book
+        $book->delete();
+
+        return response()->json(['message' => 'Book deleted']);
+    }
+
+
     public function showAllBooks()
     {
         $books = Book::all();

@@ -26,6 +26,7 @@ class PermissionSeeder extends Seeder
         'show_order',
         'show_order_against_orderid',
         'show_order_against_userid',
+        'delete_order',
         'delete_orderitem',
         'show_orderitem',
         'show_orderitem_against_id',
@@ -39,7 +40,6 @@ class PermissionSeeder extends Seeder
 
     $admin_permissions = [
         'delete_User',
-        'delete_order',
         'update_order_status',
         'delete_review',
         'create_bookcatalog',
